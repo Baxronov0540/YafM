@@ -7,7 +7,19 @@ import os
 import uuid
 from app.models import User,Media,Worker,Labaratory,Section,Manaagement,Seminar,News,Slider
 from app.utils import password_hash,looks_hashed
+from app.database import async_session_maker
+
 UPLOAD_DIR = "static/uploads"
+
+async def save_media(file_path: str) -> int:
+    """Create and save Media, return its ID"""
+    async with async_session_maker() as session:
+        media = Media(file_path=file_path)
+        session.add(media)
+        await session.flush()
+        media_id = media.id
+        await session.commit()
+        return media_id
 class UserView(ModelView):
     identity = "users"
     
@@ -34,11 +46,77 @@ class UserView(ModelView):
         if pwd and not looks_hashed(pwd):
             data["password"] = password_hash(pwd)
 
+
 class MediaView(ModelView):
     identity = "media"
-    fields = ["id", "file_path", "created_at", "updated_at"]
-    exclude_fields_from_create = ["id", "created_at", "updated_at"]
-    exclude_fields_from_edit = ["id", "created_at", "updated_at"]
+    fields = ["id", FileField("file"), "created_at", "updated_at"]
+    exclude_fields_from_create = ["id", "file_path", "created_at", "updated_at"]
+    exclude_fields_from_edit = ["id", "file_path", "created_at", "updated_at"]
+
+    async def before_create(
+        self, request: Request, data: Dict[str, Any], obj: Any
+    ) -> None:
+        file_data = data.get("file")
+        up = None
+        
+        # FileField returns tuple: (UploadFile, is_deleted)
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
+        if not up or not hasattr(up, "filename") or not up.filename:
+            raise ValueError("Fayl yuklanishi zarur")
+        
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+        ext = os.path.splitext(up.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+        path = os.path.join(UPLOAD_DIR, filename)
+
+        content = await up.read()
+        with open(path, "wb") as f:
+            f.write(content)
+
+        url = f"/{UPLOAD_DIR}/{filename}"
+        obj.file_path = url
+
+        data.pop("file", None)
+
+    async def before_edit(
+        self, request: Request, data: Dict[str, Any], obj: Any
+    ) -> None:
+        file_data = data.get("file")
+        up = None
+        
+        # FileField returns tuple: (UploadFile, is_deleted)
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
+        if up and hasattr(up, "filename") and up.filename:
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+            ext = os.path.splitext(up.filename)[1]
+            filename = f"{uuid.uuid4().hex}{ext}"
+            path = os.path.join(UPLOAD_DIR, filename)
+
+            content = await up.read()
+            with open(path, "wb") as f:
+                f.write(content)
+
+            url = f"/{UPLOAD_DIR}/{filename}"
+            obj.file_path = url
+
+        data.pop("file", None)
+
 
 class WorkerView(ModelView):
     identity="workers"
@@ -52,44 +130,54 @@ class WorkerView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
@@ -106,44 +194,54 @@ class LabaratoryView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
@@ -159,44 +257,54 @@ class SectionView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
@@ -212,44 +320,54 @@ class ManaagementView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 class SeminarView(ModelView):
@@ -272,44 +390,54 @@ class NewsView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
@@ -326,43 +454,53 @@ class SliderView(ModelView):
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # SQLAlchemy ob'ektli munosabatni o'zi bog'lab saqlaydi
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
 
     async def before_edit(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
-        up = data.get("img_file")
+        file_data = data.get("img_file")
+        up = None
+        
+        if file_data:
+            if isinstance(file_data, tuple):
+                up, is_deleted = file_data
+                if is_deleted:
+                    up = None
+            else:
+                up = file_data
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-
             ext = os.path.splitext(up.filename)[1]
             filename = f"{uuid.uuid4().hex}{ext}"
             path = os.path.join(UPLOAD_DIR, filename)
-
             content = await up.read()
             with open(path, "wb") as f:
                 f.write(content)
-
             url = f"/{UPLOAD_DIR}/{filename}"
-
-            # Eski rasmni yangisiga almashtirish
-            obj.image = Media(file_path=url)
+            obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
