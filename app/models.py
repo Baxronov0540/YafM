@@ -12,7 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-
+from app.utils import current_lang
 
 class BaseModel(Base):
     __abstract__ = True
@@ -77,7 +77,17 @@ class Labaratory(BaseModel):
 
     # relationship
     worker: Mapped["Worker"] = relationship("Worker", back_populates="labaratories")
-    image: Mapped["Media"] = relationship("Media")
+    image: Mapped["Media"] = relationship("Media", back_populates="labaratory")
+
+    @property
+    def name(self):
+        lang = current_lang.get()
+        return getattr(self, f"name_{lang}") or self.name_uz
+
+    @property
+    def body(self):
+        lang = current_lang.get()
+        return getattr(self, f"body_{lang}") or self.body_uz
 
     def __repr__(self):
         return self.name_uz
@@ -95,8 +105,18 @@ class Section(BaseModel):
     image_id: Mapped[int] = mapped_column(ForeignKey("media.id"))
 
     # relationship
-    image: Mapped["Media"] = relationship("Media")
+    image: Mapped["Media"] = relationship("Media", back_populates="section")
     worker: Mapped["Worker"] = relationship("Worker")
+
+    @property
+    def name(self):
+        lang = current_lang.get()
+        return getattr(self, f"name_{lang}") or self.name_uz
+
+    @property
+    def body(self):
+        lang = current_lang.get()
+        return getattr(self, f"body_{lang}") or self.body_uz
 
 
 class Manaagement(BaseModel):
@@ -137,7 +157,17 @@ class News(BaseModel):
     image_id: Mapped[int] = mapped_column(ForeignKey("media.id"), nullable=True)
 
     # relationships
-    image: Mapped["Media"] = relationship("Media",back_populates="news")
+    image: Mapped["Media"] = relationship("Media", back_populates="news")
+
+    @property
+    def title(self):
+        lang = current_lang.get()
+        return getattr(self, f"title_{lang}") or self.title_uz
+
+    @property
+    def body(self):
+        lang = current_lang.get()
+        return getattr(self, f"body_{lang}") or self.body_uz
 
     def __repr__(self):
         return self.title_uz
@@ -154,8 +184,17 @@ class Slider(BaseModel):
     image_id: Mapped[int] = mapped_column(ForeignKey("media.id"))
 
     # relationship
-    image: Mapped["Media"] = relationship("Media")
+    image: Mapped["Media"] = relationship("Media", back_populates="slider")
 
+    @property
+    def title(self):
+        lang = current_lang.get()
+        return getattr(self, f"title_{lang}") or self.title_uz
+
+    @property
+    def description(self):
+        lang = current_lang.get()
+        return getattr(self, f"description_{lang}") or self.description_uz
 
 
 class Defense(Base):

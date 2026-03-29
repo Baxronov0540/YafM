@@ -23,26 +23,24 @@ class WorkerResponse(BaseModel):
 
 class LabaratoryResponse(BaseModel):
     id:int
-    name_uz:str
-    name_ru:str |None=None
-    name_en:str|None=None
-    body_uz:str
-    body_ru:str|None=None
-    body_en:str|None=None
+    name:str
+    body:str
     image:ImageResponse
     worker:WorkerResponse
     created_at:datetime
     updated_at:datetime
+    
+    class Config:
+        from_attributes = True
 
 class SectionResponse(BaseModel):
     id:int
-    name_uz:str
-    name_ru:str |None=None
-    name_en:str|None=None
-    body_uz:str
-    body_ru:str|None=None
-    body_en:str|None=None
+    name:str
+    body:str
     image:ImageResponse
     worker:WorkerResponse
     created_at:datetime
     updated_at:datetime
+    
+    class Config:
+        from_attributes = True

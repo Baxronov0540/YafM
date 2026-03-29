@@ -9,15 +9,14 @@ class MediaInResponse(BaseModel):
 
 class NewsResponse(BaseModel):
     id: int
-    title_uz: str
-    title_en: str | None = None
-    title_ru: str | None = None
-    body_uz: str
-    body_en: str | None = None
-    body_ru: str | None = None
+    title: str
+    body: str
     image: MediaInResponse | None = None
     created_at: datetime
     updated_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 class UserCreateRequest(BaseModel):
     username: str

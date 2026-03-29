@@ -3,6 +3,10 @@ from fastapi import HTTPException
 from passlib.context import CryptContext
 from jose import jwt
 from jose.exceptions import JWTError
+from contextvars import ContextVar
+
+current_lang = ContextVar("current_lang", default="uz")
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 from app.config import settings

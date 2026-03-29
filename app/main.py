@@ -1,6 +1,21 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+from fastapi.requests import Request
+from app.utils import current_lang
+from app.middlewareis import LanguageMiddleware,TimeRequestMiddleware
+
+
 
 from app.routers import (
     news_router,
@@ -23,3 +38,5 @@ app.include_router(worker_router)
 admin.mount_to(app=app)
 
 add_pagination(app)
+app.add_middleware(LanguageMiddleware)
+app.add_middleware(TimeRequestMiddleware)
