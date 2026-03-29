@@ -27,7 +27,7 @@ class JSONAuthProvider(AuthProvider):
 
             if not verify_password(password, user.password):
                 raise LoginFailed("Invalid Password.")
-                
+
         access_token, refresh_token = generate_jwt_tokens(user.id)
         token = refresh_token if remember_me else access_token
         expire_delta = (
@@ -58,10 +58,10 @@ class JSONAuthProvider(AuthProvider):
                 user_id = int(user_id)
             except ValueError:
                 return None
-                
+
             if payload.get("exp") < datetime.now(UTC).timestamp():
                 return None
-                
+
             async with async_session_maker() as db:
                 stmt = select(User).where(User.id == user_id)
                 user = (await db.execute(stmt)).scalars().first()

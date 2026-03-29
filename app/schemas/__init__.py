@@ -1,4 +1,4 @@
-from .news import NewsResponse,UserCreateRequest
+from .news import NewsResponse, UserCreateRequest
 from .labaratory import LabaratoryResponse, SectionResponse, WorkerResponse
 from .managments import ManaagementResponse
 from .konfrensiya import SeminarResponse
@@ -12,5 +12,5 @@ __all__ = [
     "SeminarResponse",
     "SliderResponse",
     "WorkerResponse",
-    "UserCreateRequest"
+    "UserCreateRequest",
 ]
