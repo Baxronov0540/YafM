@@ -1,14 +1,17 @@
-from datetime import datetime,timezone,timedelta
+from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
 from passlib.context import CryptContext
 from jose import jwt
 from jose.exceptions import JWTError
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 from app.config import settings
 
+
 def password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -48,6 +51,7 @@ def decode_jwt_token(token: str):
         return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
 
 def looks_hashed(p: str):
     return p.startswith("$argon2")
