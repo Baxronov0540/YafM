@@ -2,7 +2,6 @@ from datetime import datetime
 from pydantic import BaseModel
 from .labaratory import ImageResponse
 
-
 class ManaagementResponse(BaseModel):
     id: int
     first_name: str

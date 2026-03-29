@@ -27,17 +27,13 @@ class Media(BaseModel):
     __tablename__ = "media"
     file_path: Mapped[str] = mapped_column(String, nullable=False)
 
-    # relationship
-    news: Mapped[list["News"]] = relationship("News", back_populates="image")
-    slider: Mapped[list["Slider"]] = relationship("Slider", back_populates="image")
-    worker: Mapped[list["Worker"]] = relationship("Worker", back_populates="image")
-    labaratory: Mapped[list["Labaratory"]] = relationship(
-        "Labaratory", back_populates="image"
-    )
-    section: Mapped[list["Section"]] = relationship("Section", back_populates="image")
-    management: Mapped[list["Manaagement"]] = relationship(
-        "Manaagement", back_populates="image"
-    )
+    #relationship
+    news: Mapped[list["News"]] = relationship("News",back_populates="image")
+    slider: Mapped[list["Slider"]] = relationship("Slider",back_populates="image")
+    worker: Mapped[list["Worker"]] = relationship("Worker",back_populates="image")
+    labaratory: Mapped[list["Labaratory"]] = relationship("Labaratory",back_populates="image")
+    section: Mapped[list["Section"]] = relationship("Section",back_populates="image")
+    management: Mapped[list["Manaagement"]] = relationship("Manaagement",back_populates="image")
 
 
 class User(BaseModel):
@@ -52,23 +48,19 @@ class User(BaseModel):
 
 class Worker(BaseModel):
     __tablename__ = "workers"
-
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     position: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(50), nullable=True)
     phone: Mapped[str] = mapped_column(String(50), nullable=True)
     image_id: Mapped[int] = mapped_column(ForeignKey("media.id"))
-
+    # relationship
     labaratories: Mapped[list["Labaratory"]] = relationship(
         "Labaratory", back_populates="worker"
     )
     image: Mapped["Media"] = relationship("Media")
 
     def __repr__(self):
-        return f"{self.first_name} {self.last_name}"
-
-    def __admin_repr__(self, request):
         return f"{self.first_name} {self.last_name}"
 
 
@@ -145,7 +137,7 @@ class News(BaseModel):
     image_id: Mapped[int] = mapped_column(ForeignKey("media.id"), nullable=True)
 
     # relationships
-    image: Mapped["Media"] = relationship("Media", back_populates="news")
+    image: Mapped["Media"] = relationship("Media",back_populates="news")
 
     def __repr__(self):
         return self.title_uz
@@ -163,3 +155,6 @@ class Slider(BaseModel):
 
     # relationship
     image: Mapped["Media"] = relationship("Media")
+
+
+

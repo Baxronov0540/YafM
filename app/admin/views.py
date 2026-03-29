@@ -1,16 +1,15 @@
 from starlette_admin.contrib.sqla import ModelView
-from starlette_admin import FileField, HasOne
+from starlette_admin import FileField
 from fastapi.requests import Request
+from fastapi import UploadFile
 from typing import Dict, Any
 import os
 import uuid
-from app.models import Media
-from app.utils import password_hash, looks_hashed
+from app.models import User,Media,Worker,Labaratory,Section,Manaagement,Seminar,News,Slider
+from app.utils import password_hash,looks_hashed
 from app.database import async_session_maker
 
-
 UPLOAD_DIR = "static/uploads"
-
 
 async def save_media(file_path: str) -> int:
     """Create and save Media, return its ID"""
@@ -21,23 +20,12 @@ async def save_media(file_path: str) -> int:
         media_id = media.id
         await session.commit()
         return media_id
-
-
 class UserView(ModelView):
     identity = "users"
-
-    fields = [
-        "id",
-        "username",
-        "first_name",
-        "last_name",
-        "is_active",
-        "is_admin",
-        "created_at",
-        "updated_at",
-    ]
+    
+    fields = ["id", "username", "first_name", "last_name", "is_active", "is_admin", "created_at", "updated_at"]
     exclude_fields_from_create = ["id", "created_at", "updated_at"]
-    exclude_fields_from_edit = ["id", "created_at", "updated_at"]
+    exclude_fields_from_edit = ["id", "created_at", "updated_at"]    
     exclude_fields_from_list = ["password"]
 
     async def before_edit(
@@ -70,7 +58,7 @@ class MediaView(ModelView):
     ) -> None:
         file_data = data.get("file")
         up = None
-
+        
         # FileField returns tuple: (UploadFile, is_deleted)
         if file_data:
             if isinstance(file_data, tuple):
@@ -79,10 +67,10 @@ class MediaView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if not up or not hasattr(up, "filename") or not up.filename:
             raise ValueError("Fayl yuklanishi zarur")
-
+        
         os.makedirs(UPLOAD_DIR, exist_ok=True)
 
         ext = os.path.splitext(up.filename)[1]
@@ -103,7 +91,7 @@ class MediaView(ModelView):
     ) -> None:
         file_data = data.get("file")
         up = None
-
+        
         # FileField returns tuple: (UploadFile, is_deleted)
         if file_data:
             if isinstance(file_data, tuple):
@@ -112,7 +100,7 @@ class MediaView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -131,37 +119,20 @@ class MediaView(ModelView):
 
 
 class WorkerView(ModelView):
-    identity = "workers"
-    fields = [
-        "id",
-        "first_name",
-        "last_name",
-        "position",
-        "email",
-        "phone",
-        FileField("img_file"),
-        "image_id",
-        "created_at",
-        "updated_at",
+    identity="workers"
+    fields=[
+        "id", "first_name", "last_name", "position", "email", "phone", 
+        FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-    exclude_fields_from_detail = [
-        "id",
-        "position",
-        "email",
-        "phone",
-        "image_id",
-        "created_at",
-        "updated_at",
-    ]
 
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -169,7 +140,7 @@ class WorkerView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -188,7 +159,7 @@ class WorkerView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -196,7 +167,7 @@ class WorkerView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -209,34 +180,23 @@ class WorkerView(ModelView):
             obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
-
 
 class LabaratoryView(ModelView):
-    identity = "labaratories"
-    fields = [
-        "id",
-        "name_uz",
-        "name_en",
-        "name_ru",
-        "body_uz",
-        "body_en",
-        "body_ru",
-        HasOne("worker", identity="workers"),
-        FileField("img_file"),
-        "image_id",
-        "created_at",
-        "updated_at",
+    identity="labaratories"
+    fields=[
+        "id", "name_uz", "name_en", "name_ru", "body_uz", "body_en", "body_ru", 
+        "worker_id", FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-    searchable_fields = ["name_uz", "name_en", "body_uz"]
+    
 
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -244,7 +204,7 @@ class LabaratoryView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -263,7 +223,7 @@ class LabaratoryView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -271,7 +231,7 @@ class LabaratoryView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -284,33 +244,22 @@ class LabaratoryView(ModelView):
             obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
-
 
 class SectionView(ModelView):
-    identity = "sections"
-    fields = [
-        "id",
-        "name_uz",
-        "name_en",
-        "name_ru",
-        "body_uz",
-        "body_en",
-        "body_ru",
-        HasOne("worker", identity="workers"),
-        FileField("img_file"),
-        "created_at",
-        "updated_at",
+    identity="sections"
+    fields=[
+        "id", "name_uz", "name_en", "name_ru", "body_uz", "body_en", "body_ru", 
+        "worker_id", FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-    searchable_fields = ["name_uz", "name_en", "body_uz"]
-
+    
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -318,7 +267,7 @@ class SectionView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -337,7 +286,7 @@ class SectionView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -345,7 +294,7 @@ class SectionView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -359,31 +308,21 @@ class SectionView(ModelView):
 
         data.pop("img_file", None)
 
-
-class ManagementView(ModelView):
-    identity = "managements"
-    fields = [
-        "id",
-        "first_name",
-        "last_name",
-        "position",
-        "email",
-        "phone",
-        "degree",
-        "reception_hours",
-        FileField("img_file"),
-        "created_at",
-        "updated_at",
+class ManaagementView(ModelView):
+    identity="managements"
+    fields=[
+        "id", "first_name", "last_name", "position", "email", "phone", 
+        "degree", "reception_hours", FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-
+    
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -391,7 +330,7 @@ class ManagementView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -410,7 +349,7 @@ class ManagementView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -418,7 +357,7 @@ class ManagementView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -431,45 +370,29 @@ class ManagementView(ModelView):
             obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
-
-
 class SeminarView(ModelView):
-    identity = "seminars"
-    fields = [
-        "id",
-        "full_name",
-        "description",
-        "duration",
-        "start_date",
+    identity="seminars"
+    fields=[
+        "id", "full_name", "description", "duration", "start_date", 
     ]
     exclude_fields_from_create = ["id"]
-    exclude_fields_from_edit = ["id"]
-
+    exclude_fields_from_edit = ["id"]      
 
 class NewsView(ModelView):
-    identity = "news"
-    fields = [
-        "id",
-        "title_uz",
-        "title_en",
-        "title_ru",
-        "body_uz",
-        "body_en",
-        "body_ru",
-        FileField("img_file"),
-        "image_id",
-        "created_at",
-        "updated_at",
+    identity="news"
+    fields=[
+        "id", "title_uz", "title_en", "title_ru", "body_uz", "body_en", "body_ru", 
+        FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-
+    
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -477,7 +400,7 @@ class NewsView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -496,7 +419,7 @@ class NewsView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -504,7 +427,7 @@ class NewsView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -517,32 +440,23 @@ class NewsView(ModelView):
             obj.image_id = await save_media(url)
 
         data.pop("img_file", None)
-
 
 class SliderView(ModelView):
-    identity = "sliders"
-    fields = [
-        "id",
-        "title_uz",
-        "title_en",
-        "title_ru",
-        "description_uz",
-        "description_en",
-        "description_ru",
-        FileField("img_file"),
-        "image_id",
-        "created_at",
-        "updated_at",
+    identity="sliders"
+    fields=[
+        "id", "title_uz", "title_en", "title_ru", "description_uz", "description_en", "description_ru", 
+        FileField("img_file"), "image_id", "created_at", "updated_at"
     ]
     exclude_fields_from_create = ["id", "image_id", "created_at", "updated_at"]
     exclude_fields_from_edit = ["id", "image_id", "created_at", "updated_at"]
-
+    
+    
     async def before_create(
         self, request: Request, data: Dict[str, Any], obj: Any
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -550,7 +464,7 @@ class SliderView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]
@@ -569,7 +483,7 @@ class SliderView(ModelView):
     ) -> None:
         file_data = data.get("img_file")
         up = None
-
+        
         if file_data:
             if isinstance(file_data, tuple):
                 up, is_deleted = file_data
@@ -577,7 +491,7 @@ class SliderView(ModelView):
                     up = None
             else:
                 up = file_data
-
+        
         if up and hasattr(up, "filename") and up.filename:
             os.makedirs(UPLOAD_DIR, exist_ok=True)
             ext = os.path.splitext(up.filename)[1]

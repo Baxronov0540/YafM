@@ -1,5 +1,5 @@
 from .news import router as news_router
-from .konfrensiya import router as seminar_router
+from .konfrensiya import router as  seminar_router
 from .labaratory import router as labaratory_router
 from .managments import router as managment_router
 from .slider import router as slider_router

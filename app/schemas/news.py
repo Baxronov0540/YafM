@@ -19,7 +19,7 @@ class NewsResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class UserCreateRequest(BaseModel):
     username: str
     password: str
+    

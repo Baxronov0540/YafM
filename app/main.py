@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
-
 app = FastAPI()
 
 from app.routers import (
@@ -10,6 +9,7 @@ from app.routers import (
     managment_router,
     slider_router,
     worker_router,
+    
 )
 from app.admin import admin
 
