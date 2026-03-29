@@ -7,3 +7,11 @@ class SeminarResponse(BaseModel):
     description:str
     duration:int
     start_date:datetime
+
+class DefenseResponse(BaseModel):
+    id:int
+    full_name:str
+    description:str
+    duration:int
+    start_date:datetime
+

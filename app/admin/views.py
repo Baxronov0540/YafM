@@ -378,6 +378,13 @@ class SeminarView(ModelView):
     exclude_fields_from_create = ["id"]
     exclude_fields_from_edit = ["id"]      
 
+class DefenseView(ModelView):
+    identity="defense"
+    fields=[
+        "id", "full_name", "description", "duration", "start_date", 
+    ]
+    exclude_fields_from_create = ["id"]
+    exclude_fields_from_edit = ["id"]      
 class NewsView(ModelView):
     identity="news"
     fields=[

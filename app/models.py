@@ -158,3 +158,12 @@ class Slider(BaseModel):
 
 
 
+class Defense(Base):
+    __tablename__ = "defense"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    full_name: Mapped[str] = mapped_column(String)
+    description: Mapped[str] = mapped_column(Text)
+    duration: Mapped[int] = mapped_column(Integer)
+    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
