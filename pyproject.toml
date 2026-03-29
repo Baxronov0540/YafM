@@ -7,6 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
+    "fastapi-pagination>=0.15.12",
     "fastapi[all]>=0.135.2",
+    "passlib[argon2]>=1.7.4",
+    "python-jose>=3.5.0",
+    "ruff>=0.15.8",
     "sqlalchemy>=2.0.48",
+    "starlette-admin>=0.16.0",
 ]
